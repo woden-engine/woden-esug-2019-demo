@@ -13,9 +13,10 @@ BaselineOfWodenEsug2019Demo >> baseline: spec [
 			spec 
 				baseline: #'WodenEngine' with: [
 					spec
-					repository: 'github://ronsaldo/woden/tonel' ].
+					repository: 'github://ronsaldo/woden:feature-new-entity-system/tonel' ].
 		spec package: #'WodenEsug2019Demo' with: [
 				spec requires: #(#'WodenEngine')].
 	]
 
 ]
+
