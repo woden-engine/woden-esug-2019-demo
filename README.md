@@ -1,5 +1,6 @@
-# Woden Demos
-## This is a large repository (eventually) holding different demos and assets
-## using the Woden Engine.
+# Woden ESUG 2019 Demo
+
+## This is the repository with the Woden Demo for ESUG 2019
+
 
 
