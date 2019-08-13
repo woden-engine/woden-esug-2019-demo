@@ -1,0 +1,74 @@
+"!GPU"
+| terrainFunction heightScale  |
+
+heightScale := 1200.0.
+
+
+terrainFunction := [ :x :y |
+	| p heightValue sand snow grass rock r theta	
+	craterHeight craterDeepness craterRadius volcanoRadius islandRadius islandHeight seabedHeight inBorder
+	|
+	"Compute the coordinates"
+	p := x @ y.
+	
+	r := p radius.
+	theta := p theta.
+	
+	craterHeight :=
+		((p * 0.02 fbmSignedGradientNoiseOctaves: 5 lacunarity: 2.751) * 150.0) +
+	 1000.0.
+	craterDeepness := 400.0.
+	craterRadius := 100.0.
+
+	volcanoRadius := craterRadius*10.0.
+	islandRadius := volcanoRadius + 300.0.
+	islandHeight := 40.0.
+	seabedHeight := (p * 0.0035 fbmSignedGradientNoiseOctaves: 4 lacunarity: 2.1234) * 100.0 - 50.0.
+	
+	r := r + ((theta*2.124) turbulence*27.0).
+	
+	
+	heightValue := 0.0 interpolateTo: seabedHeight at: 1.0 - ((r - islandRadius) / -200.0) exp.
+
+	snow := 0.0.
+	rock := 0.0.
+
+	sand := r smoothStepFrom: volcanoRadius to: islandRadius.
+	grass := 1.0 - sand.
+
+	r < islandRadius ifTrue: [
+		heightValue := islandHeight interpolateTo: 0.0
+			at: (r smoothStepFrom: volcanoRadius to: islandRadius).
+	].
+
+	r < volcanoRadius ifTrue: [ 
+		heightValue := craterHeight interpolateTo: islandHeight
+			at: (r smoothStepFrom: craterRadius to: volcanoRadius).
+	].
+
+	r < craterRadius ifTrue: [ 
+		heightValue := craterDeepness interpolateTo: craterHeight
+			at: (r smoothStepFrom: 0.0 to: craterRadius).
+	].
+
+	"heightValue := heightValue +
+		((p * 0.0013 fbmSignedGradientNoiseOctaves: 4 lacunarity: 2.351) * 100.0)."
+
+	inBorder := (p x abs max: p y abs) smoothStepFrom: 5000.0 to: 5100.0.
+	heightValue := heightValue interpolateTo: 400.0 at: inBorder.
+	
+	snow := heightValue smoothStepFrom: 200.0 to: 300.0.
+	grass := grass * (1.0 - snow).
+
+	{heightValue . {sand . grass . rock . snow . 0.0}}.
+].
+
+textureGenerator terrainData
+	clipMapLevels: 5;
+	minHeight: heightScale negated;
+	maxHeight: heightScale;
+	yourself.
+^ textureGenerator
+	textureExtent: 2048@2048 terrainCellSize: 5.0@5.0;
+	terrainFunction: terrainFunction;
+	evaluate
