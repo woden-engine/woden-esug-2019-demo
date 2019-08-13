@@ -51,7 +51,7 @@ WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
 	sector addGenericObjectAt: wodanicPosition with: [ :wodanic |
 		wodanic addModelLibraryNamed: 'wodanic.glb' nodeNamed: 'Wodanic' with: [ :comp |
 			comp
-				createCollisionShapeWithAllMeshes
+				createCollisionShapeWithConvexCollisionTreeNamed: 'WodanicCollisions'
 		].
 	].
 
@@ -103,9 +103,16 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 			].
 		
 		self
-			addWodanicToSector: sector at: (WMVector3F z: 4000.0).
+			addWodanicToSector: sector at: (WMVector3F z: 4000.0);
+			addLighthouseToSector: sector at: (WMVector3F x: -1120.0 y: 110.2 z: 820.0).
+
+		"Lighthouse start point"
+		"sector
+			addPlayerStartPointAt: (WMVector3F x: -1121.0 y: 112.0 z: 830.0)."
+
+		"Wodanic entry point"
 		sector
-			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4003.0)
+			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4003.0).
 	].
 
 	universe createSimulationModel
