@@ -1,12 +1,15 @@
 "!GPU"
-| terrainFunction heightScale  |
+| terrainFunction heightScale lighthousePosition lighthouseRadius |
 
 heightScale := 1200.0.
-
+lighthousePosition := (WMVector3F x: -1120.0 y: 110.0 z: 820.0).
+lighthouseRadius := 15.0.
 
 terrainFunction := [ :x :y |
 	| p heightValue sand snow grass rock r theta	
 	craterHeight craterDeepness craterRadius volcanoRadius islandRadius islandHeight seabedHeight inBorder
+	cliffTheta cliffThetaCos cliffHeight
+	lighthouseDistance
 	|
 	"Compute the coordinates"
 	p := x @ y.
@@ -14,36 +17,37 @@ terrainFunction := [ :x :y |
 	r := p radius.
 	theta := p theta.
 	
-	craterHeight :=
-		((p * 0.02 fbmSignedGradientNoiseOctaves: 5 lacunarity: 2.751) * 150.0) +
-	 1000.0.
 	craterDeepness := 400.0.
 	craterRadius := 100.0.
 
 	volcanoRadius := craterRadius*10.0.
 	islandRadius := volcanoRadius + 300.0.
-	islandHeight := 40.0.
+	islandHeight :=  (p * 0.0025 fbmSignedGradientNoiseOctaves: 4 lacunarity: 1.751) * 200.0 + 50.0.
+	craterHeight :=  (p * 0.02 fbmSignedGradientNoiseOctaves: 5 lacunarity: 2.751) * 150.0 + 1000.0.
 	seabedHeight := (p * 0.0035 fbmSignedGradientNoiseOctaves: 4 lacunarity: 2.1234) * 100.0 - 50.0.
 	
 	r := r + ((theta*2.124) turbulence*27.0).
 	
-	
 	heightValue := 0.0 interpolateTo: seabedHeight at: 1.0 - ((r - islandRadius) / -200.0) exp.
 
+	cliffTheta := theta + 3.6.
+	cliffThetaCos := cliffTheta cos.
+	cliffHeight := (p * 0.0035 fbmSignedGradientNoiseOctaves: 4 lacunarity: 2.1234)*80.0 + 100.0.
+	cliffHeight := cliffHeight * (cliffThetaCos smoothStepFrom: 0.70 to: 1.0).
+	
 	snow := 0.0.
 	rock := 0.0.
-
 	sand := r smoothStepFrom: volcanoRadius to: islandRadius.
 	grass := 1.0 - sand.
 
 	r < islandRadius ifTrue: [
 		heightValue := islandHeight interpolateTo: 0.0
-			at: (r smoothStepFrom: volcanoRadius to: islandRadius).
+			at: (r smoothStepFrom: volcanoRadius to: islandRadius)
 	].
 
 	r < volcanoRadius ifTrue: [ 
 		heightValue := craterHeight interpolateTo: islandHeight
-			at: (r smoothStepFrom: craterRadius to: volcanoRadius).
+			at: (r smoothStepFrom: craterRadius to: volcanoRadius)
 	].
 
 	r < craterRadius ifTrue: [ 
@@ -58,6 +62,18 @@ terrainFunction := [ :x :y |
 	heightValue := heightValue interpolateTo:
 		(p * 0.0007 fbmSignedGradientNoiseOctaves: 4 lacunarity: 2.654) * 700.0 + 350.0
 		at: inBorder.
+
+	(cliffHeight > 0.0 and: [r < (islandRadius + 200.0)]) ifTrue: [ 
+		cliffHeight := cliffHeight interpolateTo: heightValue at:
+			(r smoothStepFrom: islandRadius + 100.0 to: islandRadius + 200.0 ).
+
+		heightValue := heightValue max: cliffHeight.
+	].
+
+	"Flatten the soil for the lighthouse"
+	lighthouseDistance := (p - lighthousePosition xz) length.
+	heightValue := lighthousePosition y interpolateTo: heightValue at:
+		 (lighthouseDistance smoothStepFrom: lighthouseRadius to: lighthouseRadius + 4.0).
 	
 	snow := heightValue smoothStepFrom: 200.0 to: 300.0.
 	grass := grass * (1.0 - snow).
