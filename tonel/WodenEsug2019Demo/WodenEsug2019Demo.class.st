@@ -48,10 +48,28 @@ WodenEsug2019Demo class >> addLighthouseToSector: sector at: lighthousePosition 
 
 { #category : #'as yet unclassified' }
 WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
+	| frontChimneyPosition backChimneyPosition helmWheelBoundingBox |
 	sector addGenericObjectAt: wodanicPosition with: [ :wodanic |
+		
 		wodanic addModelLibraryNamed: 'wodanic.glb' nodeNamed: 'Wodanic' with: [ :comp |
 			comp
-				createCollisionShapeWithConvexCollisionTreeNamed: 'WodanicCollisions'
+				createCollisionShapeWithConvexCollisionTreeNamed: 'WodanicCollisions'.
+				
+			frontChimneyPosition := comp getChildNodePosition: 'WodanicFrontChimneySmoke'.
+			backChimneyPosition := comp getChildNodePosition: 'WodanicBackChimneySmoke'.
+			helmWheelBoundingBox := comp getChildNodeBoundingBox: 'WodanicHelmWheel'.
+		].
+	
+		(wodanic buildParticleSystemWith: [ :chimney |
+			self createChimneyParticleSystem: chimney
+		]) translateTo: frontChimneyPosition.
+
+		(wodanic buildParticleSystemWith: [ :chimney |
+			self createChimneyParticleSystem: chimney
+		]) translateTo: backChimneyPosition.
+	
+		wodanic addUseActuationBoxVolume: helmWheelBoundingBox withAction: [ :sender :rayCastingTest |
+			Transcript show: sender; space; show: 'uses wodanic helm'; cr.
 		].
 	].
 
@@ -60,11 +78,50 @@ WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
 ]
 
 { #category : #'as yet unclassified' }
+WodenEsug2019Demo class >> createChimneyParticleSystem: particleSystem [
+	| colorRamp |
+	colorRamp := WDCLinearRamp with: {
+		0.0 -> '000000' asColor asWMVector3F asWMVector4F.
+		0.6 -> 'ff0000' asColor asWMVector3F asWMVector4F.
+		0.90 -> 'ffff00' asColor asWMVector3F asWMVector4F.
+		1.0 -> 'ffff80' asColor asWMVector3F asWMVector4F.
+	}.
+	
+	particleSystem boundingBox: (WMBox3DF halfExtent: (WMVector3F ones*5.0)).
+	particleSystem particleCount: 2048.
+	particleSystem simulationBlock: [ :particleState :index :delta |
+		| lifeTime color flickering |
+		lifeTime := particleState lifeTime  - delta.
+		lifeTime <= 0.0 ifTrue:[
+			lifeTime := 1.7 + particleState nextRandom*1.5.
+			particleState
+				startingUp: false;
+				position: particleState nextRandomVector3F * 0.25;
+				velocity: (WMVector3F
+					x: particleState nextRandom*0.5
+					y: 2.0 + (particleState nextRandom *0.5)
+					z: particleState nextRandom*0.5).
+		].
+	
+		color := colorRamp value: lifeTime / 3.0.
+		flickering := (lifeTime*25.0) signedGradientNoise  *0.4 + 0.6.
+		
+		particleState
+			size: (WMVector3F x: 0.2 y: 0.2);
+			velocity: (particleState velocity + (WMVector3F y: -9.8 * delta*0.04));
+			position: (particleState position + (particleState velocity *delta));
+			color: color * flickering;
+			lifeTime: lifeTime.
+	].
+
+]
+
+{ #category : #'as yet unclassified' }
 WodenEsug2019Demo class >> exampleEsugDemo [
 	| engine universe terrainMaterial waterMaterial terrainData |
 	engine := WDCEngine default.
 	terrainMaterial := engine resourceCache loadMaterial: 'materials/demos/island.json'.
-	terrainData := engine resourceCache loadTerrain: 'terrains/sectors/lake-walled.stterrain'.
+	terrainData := engine resourceCache loadTerrain: 'terrains/sectors/lake-wallen.stterrain'.
 	
 	universe := WDESSimpleUniverse for: engine.
 	universe
