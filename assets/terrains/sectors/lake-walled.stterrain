@@ -10,6 +10,7 @@ terrainFunction := [ :x :y |
 	craterHeight craterDeepness craterRadius volcanoRadius islandRadius islandHeight seabedHeight inBorder
 	cliffTheta cliffThetaCos cliffHeight
 	lighthouseDistance
+	snowHeight
 	|
 	"Compute the coordinates"
 	p := x @ y.
@@ -75,7 +76,8 @@ terrainFunction := [ :x :y |
 	heightValue := lighthousePosition y interpolateTo: heightValue at:
 		 (lighthouseDistance smoothStepFrom: lighthouseRadius to: lighthouseRadius + 4.0).
 	
-	snow := heightValue smoothStepFrom: 200.0 to: 300.0.
+	snowHeight := (p * 0.020 fbmSignedGradientNoiseAbsOctaves: 3 lacunarity: 1.754)*600.0 + 250.0.
+	snow := heightValue smoothStepFrom: snowHeight to: snowHeight + 100.0.
 	grass := grass * (1.0 - snow).
 
 	{heightValue . {sand . grass . rock . snow . 0.0}}.
