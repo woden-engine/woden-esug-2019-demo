@@ -96,7 +96,7 @@ WodenEsug2019Demo class >> exampleTest02Island [
 	| engine universe terrainMaterial waterMaterial terrainData altoModelName |
 	engine := WDCEngine default.
 	terrainMaterial := engine resourceCache loadMaterial: 'materials/demos/island.json'.
-	terrainData := engine resourceCache loadTerrain: 'terrains/demos/procedural/island.stterrain'.
+	terrainData := engine resourceCache loadTerrain: 'terrains/sectors/lake-walled.stterrain'.
 	altoModelName := 'models/computers/alto.glb'.
 	
 	universe := WDESSimpleUniverse for: engine.
@@ -152,6 +152,59 @@ WodenEsug2019Demo class >> exampleTest02Island [
 		self addAltoToSector: sector at: (WMVector3F x: 1.5 y: 3.0 z: 180.0).
 		sector
 			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 183.0)
+	].
+
+	universe createSimulationModel
+		open
+		spawnPlayer.
+		
+]
+
+{ #category : #'as yet unclassified' }
+WodenEsug2019Demo class >> exampleTest03Island [
+	| engine universe terrainMaterial waterMaterial terrainData |
+	engine := WDCEngine default.
+	terrainMaterial := engine resourceCache loadMaterial: 'materials/demos/island.json'.
+	terrainData := engine resourceCache loadTerrain: 'terrains/sectors/lake-walled.stterrain'.
+	
+	universe := WDESSimpleUniverse for: engine.
+	universe defaultCameraFarDistance: 10000.0.
+	universe buildSector: [ :sector |
+		sector buildTerrainMeshWithData: terrainData withMaterial: terrainMaterial.
+	
+		sector addWaterVolumeAt: WMVector3F zero with: [ :waterVolume |
+			(waterVolume buildWaterMeshWith: [ :meshBuilder |
+				waterMaterial := engine resourceCache loadMaterial: 'materials/demos/ocean.json'.
+				meshBuilder
+					material: waterMaterial;
+					heightScale: 0.1.
+				terrainData buildWaterMeshWith: meshBuilder.
+				meshBuilder
+					addBoxCollisionShape: (WMBox3DF
+						halfExtent: (WMVector3F x: 200.0 y: 200.0 z: 200.0)
+						center: (WMVector3F y: -200.0))
+			]) renderable deformationState
+				harmonicAt: 1 amplitude: 0.015 frequency: 2.23 center: (WMVector2F zero);
+				harmonicAt: 2 amplitude: 0.03 frequency: 0.50 center: (WMVector2F zero).
+		].
+
+		sector
+			addDirectionalLightWith: [ :light |
+				| skyTexture |
+				light
+					castShadows: true;
+					intensity: (WMVector4F x: 1.0 y: 1.0 z: 0.8) normalized * 0.7;
+					rotateDegreesOnX: -45;
+					rotateDegreesOnY: -100;
+					translateToX: 0.0 y: 1.5 z: 2.5.
+					
+				skyTexture := WDASceneExamples proceduralSkySunDirection: light forwardDirection.
+				skyTexture := skyTexture asSRGBTextureFor: engine.
+				sector addSkyBoxWithTexture: skyTexture
+			].
+		
+		sector
+			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 0.0 z: 1300.0)
 	].
 
 	universe createSimulationModel
