@@ -68,6 +68,7 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 	
 	universe := WDESSimpleUniverse for: engine.
 	universe
+		gameLogicClass: WodenEsug2019DemoGameLogic;
 		defaultCameraFarDistance: 10000.0;
 		defaultCameraCascadeSplitDistributionLambda: 1.0.
 	universe buildSector: [ :sector |
