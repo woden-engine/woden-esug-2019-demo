@@ -48,16 +48,38 @@ WodenEsug2019Demo class >> addLighthouseToSector: sector at: lighthousePosition 
 
 { #category : #'as yet unclassified' }
 WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
-	| frontChimneyPosition backChimneyPosition helmWheelBoundingBox |
+	|  kinematicBehavior altoModelName |
+	
+	altoModelName := 'models/computers/alto.glb'.
 	sector addGenericObjectAt: wodanicPosition with: [ :wodanic |
+		| frontChimneyPosition backChimneyPosition helmWheelBoundingBox wodanicModel |
+		wodanic makeKinematicPhysicsObject.
 		
-		wodanic addModelLibraryNamed: 'wodanic.glb' nodeNamed: 'Wodanic' with: [ :comp |
+		kinematicBehavior := wodanic addComponent: WDESLinearKinematicPhysicsBehavior new.
+		
+		"wodanic makeRigidBodyWithMass: 1000.0."
+		
+		wodanicModel := 
+			wodanic addModelLibraryNamed: 'wodanic.glb' nodeNamed: 'Wodanic' with: [ :comp |
 			comp
 				createCollisionShapeWithConvexCollisionTreeNamed: 'WodanicCollisions'.
 				
 			frontChimneyPosition := comp getChildNodePosition: 'WodanicFrontChimneySmoke'.
 			backChimneyPosition := comp getChildNodePosition: 'WodanicBackChimneySmoke'.
 			helmWheelBoundingBox := comp getChildNodeBoundingBox: 'WodanicHelmWheel'.
+		].
+
+		wodanic addModelLibraryNamed: altoModelName nodeNamed: 'AltoCpu' with: [ :comp |
+			comp position: (wodanicModel getChildNodePosition: 'WodanicAltoCpuLocation')
+		].
+		wodanic addModelLibraryNamed: altoModelName nodeNamed: 'AltoMonitor' with: [ :comp |
+			comp position: (wodanicModel getChildNodePosition: 'WodanicAltoMonitorLocation')
+		].
+		wodanic addModelLibraryNamed: altoModelName nodeNamed: 'AltoKeyboard' with: [ :comp |
+			comp position: (wodanicModel getChildNodePosition: 'WodanicAltoKeyboardLocation')
+		].
+		wodanic addModelLibraryNamed: altoModelName nodeNamed: 'AltoMouse' with: [ :comp |
+			comp position: (wodanicModel getChildNodePosition: 'WodanicAltoMouseLocation')
 		].
 	
 		(wodanic buildParticleSystemWith: [ :chimney |
@@ -69,11 +91,9 @@ WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
 		]) translateTo: backChimneyPosition.
 	
 		wodanic addUseActuationBoxVolume: helmWheelBoundingBox withAction: [ :sender :rayCastingTest |
-			Transcript show: sender; space; show: 'uses wodanic helm'; cr.
+			kinematicBehavior linearVelocity: kinematicBehavior linearVelocity + (WMVector3F z: -10.0)
 		].
 	].
-
-	self addAltoToSector: sector at: wodanicPosition + (WMVector3F x: 1.5 y: 3.0 z: 0.0).
 
 ]
 
