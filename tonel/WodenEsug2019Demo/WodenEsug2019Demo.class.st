@@ -48,17 +48,16 @@ WodenEsug2019Demo class >> addLighthouseToSector: sector at: lighthousePosition 
 
 { #category : #'as yet unclassified' }
 WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
-	|  kinematicBehavior altoModelName |
+	| altoModelName dashboardModel |
 	
 	altoModelName := 'models/computers/alto.glb'.
+	dashboardModel := nil.
 	sector addGenericObjectAt: wodanicPosition with: [ :wodanic |
-		| frontChimneyPosition backChimneyPosition helmWheelBoundingBox wodanicModel |
+		| frontChimneyPosition backChimneyPosition helmWheelBoundingBox wodanicModel driverPosition kinematicBehavior |
 		wodanic makeKinematicPhysicsObject.
 		
-		kinematicBehavior := wodanic addComponent: WDESLinearKinematicPhysicsBehavior new.
-		
-		"wodanic makeRigidBodyWithMass: 1000.0."
-		
+		kinematicBehavior := wodanic addComponent: WodanicKinematicPhysicsBehavior new.
+
 		wodanicModel := 
 			wodanic addModelLibraryNamed: 'wodanic.glb' nodeNamed: 'Wodanic' with: [ :comp |
 			comp
@@ -66,6 +65,7 @@ WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
 				
 			frontChimneyPosition := comp getChildNodePosition: 'WodanicFrontChimneySmoke'.
 			backChimneyPosition := comp getChildNodePosition: 'WodanicBackChimneySmoke'.
+			driverPosition := comp getChildNodePosition: 'WodanicDriverLocation'.
 			helmWheelBoundingBox := comp getChildNodeBoundingBox: 'WodanicHelmWheel'.
 		].
 
@@ -73,13 +73,13 @@ WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
 			comp position: (wodanicModel getChildNodePosition: 'WodanicAltoCpuLocation')
 		].
 		wodanic addModelLibraryNamed: altoModelName nodeNamed: 'AltoMonitor' with: [ :comp |
-			comp position: (wodanicModel getChildNodePosition: 'WodanicAltoMonitorLocation')
+			comp localTransform: (wodanicModel getChildNodeTransform: 'WodanicAltoMonitorLocation')
 		].
 		wodanic addModelLibraryNamed: altoModelName nodeNamed: 'AltoKeyboard' with: [ :comp |
-			comp position: (wodanicModel getChildNodePosition: 'WodanicAltoKeyboardLocation')
+			comp localTransform: (wodanicModel getChildNodeTransform: 'WodanicAltoKeyboardLocation')
 		].
 		wodanic addModelLibraryNamed: altoModelName nodeNamed: 'AltoMouse' with: [ :comp |
-			comp position: (wodanicModel getChildNodePosition: 'WodanicAltoMouseLocation')
+			comp localTransform: (wodanicModel getChildNodeTransform: 'WodanicAltoMouseLocation')
 		].
 	
 		(wodanic buildParticleSystemWith: [ :chimney |
@@ -91,7 +91,22 @@ WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
 		]) translateTo: backChimneyPosition.
 	
 		wodanic addUseActuationBoxVolume: helmWheelBoundingBox withAction: [ :sender :rayCastingTest |
-			kinematicBehavior linearVelocity: kinematicBehavior linearVelocity + (WMVector3F z: -10.0)
+			dashboardModel ifNil: [ 
+				dashboardModel := WodanicDashboardModel new
+					vehicle: wodanic;
+					vehicleKinematicBehavior: kinematicBehavior.
+				dashboardModel openOnRenderTargetTexture: (sector engine resourceCache getNamedRenderTargetTexture: '$AltoRenderTarget' ifAbsent: []) 
+			].
+		
+			kinematicBehavior helmWheelSceneNode ifNil: [
+				kinematicBehavior helmWheelSceneNode: (wodanic sceneNode findChildNodeNamed: 'WodanicHelmWheel' ifAbsent: [ nil ]).
+		].
+			
+			sender displacementStrategy: (WodanicDrivingCharacterController new
+				vehicle: wodanic;
+				vehicleKinematicBehavior: kinematicBehavior;
+				localDriverPosition: driverPosition;
+				yourself)
 		].
 	].
 
@@ -190,7 +205,7 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 
 		"Wodanic entry point"
 		sector
-			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4003.0).
+			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4001.0).
 	].
 
 	universe createSimulationModel
