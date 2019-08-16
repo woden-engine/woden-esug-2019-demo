@@ -153,25 +153,33 @@ WodenEsug2019Demo class >> createChimneyParticleSystem: particleSystem [
 
 { #category : #'as yet unclassified' }
 WodenEsug2019Demo class >> exampleEsugDemo [
-	| engine universe terrainMaterial waterMaterial terrainData |
+	| engine universe terrainMaterial waterMaterial terrainData underwaterFog |
 	engine := WDCEngine default.
 	terrainMaterial := engine resourceCache loadMaterial: 'materials/demos/island.json'.
 	terrainData := engine resourceCache loadTerrain: 'terrains/sectors/lake-wallen.stterrain'.
+	underwaterFog := WDESFogSettings defaultUnderwaterFogSettings.
+	underwaterFog useExponentialSquaredFog
+		farDistanceOverride: 500.0;
+		fogDensity: 0.01.
 	
 	universe := WDESSimpleUniverse for: engine.
 	universe
 		gameLogicClass: WodenEsug2019DemoGameLogic;
-		defaultCameraFarDistance: 10000.0;
-		defaultCameraCascadeSplitDistributionLambda: 1.0.
+		defaultCameraFarDistance: 2500.0;
+		defaultCameraCascadeSplitDistributionLambda: 1.0;
+		defaultFogSettings: (WDESFogSettings new
+			fogColor: (Color fromHexString: '83b4dd') asWMVector4F;
+			useExponentialFog;
+			fogDensity:0.0008).
 	universe buildSector: [ :sector |
 		sector buildTerrainMeshWithData: terrainData withMaterial: terrainMaterial.
 	
-		sector addWaterVolumeAt: WMVector3F zero with: [ :waterVolume |
-			(waterVolume buildWaterMeshWith: [ :meshBuilder |
+		sector addWaterVolumeAt: WMVector3F zero with: [ :waterEntity :waterComponent |
+			waterComponent environmentFogSettings: underwaterFog.
+			(waterEntity buildWaterMeshWith: [ :meshBuilder |
 				waterMaterial := engine resourceCache loadMaterial: 'materials/demos/ocean.json'.
 				meshBuilder
-					material: waterMaterial;
-					heightScale: 0.1.
+					material: waterMaterial.
 				terrainData buildWaterMeshWith: meshBuilder.
 				meshBuilder
 					addCollisionBoxWithMinHeight: -1000.0 maxHeight: 0.0 
