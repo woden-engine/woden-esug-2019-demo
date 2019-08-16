@@ -160,17 +160,18 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 	underwaterFog := WDESFogSettings defaultUnderwaterFogSettings.
 	underwaterFog useExponentialSquaredFog
 		farDistanceOverride: 500.0;
-		fogDensity: 0.01.
+		fogDensity: 0.01;
+		cameraCascadeSplitDistribution: 0.5.
 	
 	universe := WDESSimpleUniverse for: engine.
 	universe
 		gameLogicClass: WodenEsug2019DemoGameLogic;
-		defaultCameraFarDistance: 2500.0;
-		defaultCameraCascadeSplitDistributionLambda: 1.0;
+		defaultCameraFarDistance: 6000.0;
+		defaultCameraCascadeSplitDistribution: {15.0 . 500.0 . 1000.0};
 		defaultFogSettings: (WDESFogSettings new
 			fogColor: (Color fromHexString: '83b4dd') asWMVector4F;
-			useExponentialFog;
-			fogDensity:0.0008).
+			useExponentialSquaredFog;
+			fogDensity: 0.0003).
 	universe buildSector: [ :sector |
 		sector buildTerrainMeshWithData: terrainData withMaterial: terrainMaterial.
 	
@@ -198,7 +199,7 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 					rotateDegreesOnY: -100;
 					translateToX: 0.0 y: 1.5 z: 2.5.
 					
-				skyTexture := WDASceneExamples proceduralSkySunDirection: light forwardDirection.
+				skyTexture := self proceduralSkySunDirection: light forwardDirection.
 				skyTexture := skyTexture asSRGBTextureFor: engine.
 				sector addSkyBoxWithTexture: skyTexture
 			].
@@ -220,6 +221,48 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 		open
 		spawnPlayer.
 		
+]
+
+{ #category : #'as yet unclassified' }
+WodenEsug2019Demo class >> proceduralSkySunDirection: sunDirection [
+	| horizonRamp sunColor sunAngleSizeCos sunAngleSizeOuterCos shader |
+	
+	horizonRamp := WDCLinearRamp with: {
+		0.2 ->(Color fromHexString: '83b4dd').
+		1.5 -> (Color fromHexString: '001c6f').
+	}.
+		
+	sunColor := (Color fromHexString: 'f3f3e8') asWMVector4F.
+	sunAngleSizeCos := 0.5 degreesToRadians cos.
+	sunAngleSizeOuterCos := 20.0 degreesToRadians cos.
+		
+	shader := [ :x :y :z |
+		| direction background atmosphere clouds sunCos sunFactor |
+		direction := (WMVector3F x: x y: y z: z) normalized.
+		sunCos := direction dot: sunDirection.
+		sunFactor := sunCos smoothStepFrom: sunAngleSizeOuterCos to: sunAngleSizeCos.
+
+		atmosphere := horizonRamp value: direction y.
+
+		clouds := 0.0.
+		direction y > 0.0 ifTrue: [
+			|t|
+			t := 2.5 / direction y.
+			clouds := (direction xz * t) fbmGradientNoiseOctaves: 4 lacunarity: 2.0.
+			clouds := (clouds*2.0 - 1.0 max: 0.0) min: 1.0.
+		
+			clouds := clouds * (direction y smoothStepFrom: 0.5 to: 0.6)
+		].
+	
+		background := atmosphere interpolateTo: (WMVector4F x: 1.0 y: 1.0 z: 1.0 w: 1.0) at: clouds.
+		background interpolateTo: sunColor at: (sunFactor raisedTo: 8.0)
+	].
+
+	^ WDCPharoProceduralGPUScriptEvaluator new
+		textureExtent: 512@512;
+		skyCubeMap: true;
+		colorFunction: shader;
+		evaluate.
 ]
 
 { #category : #'see class side' }
