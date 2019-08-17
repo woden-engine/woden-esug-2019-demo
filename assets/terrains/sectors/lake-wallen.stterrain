@@ -84,7 +84,7 @@ terrainFunction := [ :x :y |
 ].
 
 textureGenerator terrainData
-	clipMapLevels: 5;
+	clipMapLevels: 3;
 	minHeight: heightScale negated;
 	maxHeight: heightScale;
 	yourself.
