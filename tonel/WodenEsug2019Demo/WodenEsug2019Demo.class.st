@@ -59,7 +59,7 @@ WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
 		kinematicBehavior := wodanic addComponent: WodanicKinematicPhysicsBehavior new.
 
 		wodanicModel := 
-			wodanic addModelLibraryNamed: 'wodanic.glb' nodeNamed: 'Wodanic' with: [ :comp |
+			wodanic addModelLibraryNamed: 'models/vehicles/wodanic.glb' nodeNamed: 'Wodanic' with: [ :comp |
 			comp
 				createCollisionShapeWithConvexCollisionTreeNamed: 'WodanicCollisions'.
 				
@@ -113,6 +113,11 @@ WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
 ]
 
 { #category : #'as yet unclassified' }
+WodenEsug2019Demo class >> atmosphereIntensityForSunIntensity: sunIntensity [
+	^ sunIntensity *0.1.
+]
+
+{ #category : #'as yet unclassified' }
 WodenEsug2019Demo class >> createChimneyParticleSystem: particleSystem [
 	| colorRamp |
 	colorRamp := WDCLinearRamp with: {
@@ -153,12 +158,15 @@ WodenEsug2019Demo class >> createChimneyParticleSystem: particleSystem [
 
 { #category : #'as yet unclassified' }
 WodenEsug2019Demo class >> exampleEsugDemo [
-	| engine universe terrainMaterial waterMaterial terrainData underwaterFog |
+	| engine universe terrainMaterial waterMaterial terrainData underwaterFog sunIntensity |
 	engine := WDCEngine default.
 	terrainMaterial := engine resourceCache loadMaterial: 'materials/demos/island.json'.
 	terrainData := engine resourceCache loadTerrain: 'terrains/sectors/lake-wallen.stterrain'.
-	underwaterFog := WDESFogSettings defaultUnderwaterFogSettings.
+	sunIntensity := 30.0.
+	
+	underwaterFog := WDESFogSettings new.
 	underwaterFog useExponentialSquaredFog
+		fogColor: (((Color fromHexString: '0E1233') hdrNormalized * sunIntensity*0.01) w: 1.0);
 		farDistanceOverride: 500.0;
 		fogDensity: 0.01;
 		cameraCascadeSplitDistribution: 0.5.
@@ -168,8 +176,9 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 		gameLogicClass: WodenEsug2019DemoGameLogic;
 		defaultCameraFarDistance: 6000.0;
 		defaultCameraCascadeSplitDistribution: {15.0 . 500.0 . 1000.0};
+		"defaultCameraToneMappingOperator: #filmic;"
 		defaultFogSettings: (WDESFogSettings new
-			fogColor: (Color fromHexString: '83b4dd') asWMVector4F;
+			fogColor: ((self fogColorForSunIntensity: sunIntensity) w: 1.0);
 			useExponentialSquaredFog;
 			fogDensity: 0.0003).
 	universe buildSector: [ :sector |
@@ -194,13 +203,13 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 				| skyTexture |
 				light
 					castShadows: true;
-					intensity: (WMVector4F x: 1.0 y: 1.0 z: 0.8) normalized * 0.7;
+					intensity: (WMVector4F x: 1.0 y: 1.0 z: 0.4) normalized * sunIntensity;
 					rotateDegreesOnX: -45;
 					rotateDegreesOnY: -100;
 					translateToX: 0.0 y: 1.5 z: 2.5.
 					
-				skyTexture := self proceduralSkySunDirection: light forwardDirection.
-				skyTexture := skyTexture asSRGBTextureFor: engine.
+				skyTexture := self proceduralSkySunDirection: light forwardDirection sunColor: light intensity.
+				skyTexture := skyTexture asTextureFor: engine.
 				sector addSkyBoxWithTexture: skyTexture
 			].
 		
@@ -224,17 +233,23 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 ]
 
 { #category : #'as yet unclassified' }
-WodenEsug2019Demo class >> proceduralSkySunDirection: sunDirection [
-	| horizonRamp sunColor sunAngleSizeCos sunAngleSizeOuterCos shader |
-	
+WodenEsug2019Demo class >> fogColorForSunIntensity: sunIntensity [
+	^ (Color fromHexString: '83b4dd') hdrNormalized * (self atmosphereIntensityForSunIntensity: sunIntensity)
+]
+
+{ #category : #'as yet unclassified' }
+WodenEsug2019Demo class >> proceduralSkySunDirection: sunDirection sunColor: sunColor [
+	| horizonRamp sunIntensity sunAngleSizeCos sunAngleSizeOuterCos shader atmosphereIntensity cloudsColor |
+	sunIntensity := sunColor length.
+	atmosphereIntensity := sunIntensity / 3.0.
 	horizonRamp := WDCLinearRamp with: {
-		0.2 ->(Color fromHexString: '83b4dd').
-		1.5 -> (Color fromHexString: '001c6f').
+		0.2 -> (self fogColorForSunIntensity: sunIntensity).
+		1.5 -> ((Color fromHexString: '001c6f') hdrNormalized * atmosphereIntensity).
 	}.
 		
-	sunColor := (Color fromHexString: 'f3f3e8') asWMVector4F.
 	sunAngleSizeCos := 0.5 degreesToRadians cos.
 	sunAngleSizeOuterCos := 20.0 degreesToRadians cos.
+	cloudsColor := WMVector4F ones * (atmosphereIntensity *2.0).
 		
 	shader := [ :x :y :z |
 		| direction background atmosphere clouds sunCos sunFactor |
@@ -254,12 +269,12 @@ WodenEsug2019Demo class >> proceduralSkySunDirection: sunDirection [
 			clouds := clouds * (direction y smoothStepFrom: 0.5 to: 0.6)
 		].
 	
-		background := atmosphere interpolateTo: (WMVector4F x: 1.0 y: 1.0 z: 1.0 w: 1.0) at: clouds.
+		background := atmosphere interpolateTo: cloudsColor at: clouds.
 		background interpolateTo: sunColor at: (sunFactor raisedTo: 8.0)
 	].
 
 	^ WDCPharoProceduralGPUScriptEvaluator new
-		textureExtent: 512@512;
+		textureExtent: 1024@1024;
 		skyCubeMap: true;
 		colorFunction: shader;
 		evaluate.

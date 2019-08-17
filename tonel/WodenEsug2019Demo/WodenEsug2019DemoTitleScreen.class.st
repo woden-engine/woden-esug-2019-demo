@@ -55,8 +55,8 @@ WodenEsug2019DemoTitleScreen >> initialize [
 
 { #category : #testing }
 WodenEsug2019DemoTitleScreen >> isAlive [
-	"^ sequenceTime < 10.0."
-	^ sequenceTime < 0.0.
+	^ sequenceTime < 10.0
+	"^ sequenceTime < 0.0."
 ]
 
 { #category : #testing }
