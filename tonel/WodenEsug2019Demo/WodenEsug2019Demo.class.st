@@ -176,7 +176,8 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 		gameLogicClass: WodenEsug2019DemoGameLogic;
 		defaultCameraFarDistance: 6000.0;
 		defaultCameraCascadeSplitDistribution: {15.0 . 500.0 . 1000.0};
-		"defaultCameraToneMappingOperator: #filmic;"
+		defaultCameraToneMappingOperator: #filmic;
+		defaultCameraExposure: 0.8;
 		defaultFogSettings: (WDESFogSettings new
 			fogColor: ((self fogColorForSunIntensity: sunIntensity) w: 1.0);
 			useExponentialSquaredFog;
@@ -204,6 +205,8 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 				light
 					castShadows: true;
 					intensity: (WMVector4F x: 1.0 y: 1.0 z: 0.4) normalized * sunIntensity;
+					shadowMapDepthBiasConstant: 4.0;
+					shadowMapDepthBiasSlope: 10.0;
 					rotateDegreesOnX: -45;
 					rotateDegreesOnY: -100;
 					translateToX: 0.0 y: 1.5 z: 2.5.
