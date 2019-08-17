@@ -26,6 +26,7 @@ terrainFunction := [ :x :y |
 	islandHeight :=  (p * 0.0025 fbmSignedGradientNoiseOctaves: 4 lacunarity: 1.751) * 200.0 + 50.0.
 	craterHeight :=  (p * 0.02 fbmSignedGradientNoiseOctaves: 5 lacunarity: 2.751) * 150.0 + 1000.0.
 	seabedHeight := (p * 0.0035 fbmSignedGradientNoiseOctaves: 4 lacunarity: 2.1234) * 100.0 - 50.0.
+	seabedHeight := seabedHeight + ((p * 0.000578 fbmSignedGradientNoiseAbsOctaves: 4 lacunarity: 7.1234) * -1000.0).
 	
 	r := r + ((theta*2.124) turbulence*27.0).
 	
@@ -36,11 +37,6 @@ terrainFunction := [ :x :y |
 	cliffHeight := (p * 0.0035 fbmSignedGradientNoiseOctaves: 4 lacunarity: 2.1234)*80.0 + 100.0.
 	cliffHeight := cliffHeight * (cliffThetaCos smoothStepFrom: 0.70 to: 1.0).
 	
-	snow := 0.0.
-	rock := 0.0.
-	sand := r smoothStepFrom: volcanoRadius to: islandRadius.
-	grass := 1.0 - sand.
-
 	r < islandRadius ifTrue: [
 		heightValue := islandHeight interpolateTo: 0.0
 			at: (r smoothStepFrom: volcanoRadius to: islandRadius)
@@ -76,9 +72,30 @@ terrainFunction := [ :x :y |
 	heightValue := lighthousePosition y interpolateTo: heightValue at:
 		 (lighthouseDistance smoothStepFrom: lighthouseRadius to: lighthouseRadius + 4.0).
 	
-	snowHeight := (p * 0.020 fbmSignedGradientNoiseAbsOctaves: 3 lacunarity: 1.754)*600.0 + 250.0.
-	snow := heightValue smoothStepFrom: snowHeight to: snowHeight + 100.0.
+	snowHeight := (p * 0.018 fbmSignedGradientNoiseAbsOctaves: 3 lacunarity: 2.354)
+		* ((p  * 0.0015 fbmSignedGradientNoiseOctaves: 3 lacunarity: 2.764)*0.5 + 0.5)*1000.0
+		+ 250.0.
+	snow := heightValue smoothStepFrom: snowHeight - 100.0 to: snowHeight + 100.0.
+
+	grass := 
+		((p * 1230.45 * (
+			(p * 0.012345 fbmGradientNoiseOctaves: 4 lacunarity: 3.712)*0.8 + 0.2
+		) fbmSignedGradientNoiseOctaves: 4 lacunarity: 2.312))
+		"stepEdge: -0.0."
+		smoothStepFrom: -0.2 to: 0.0.
+	
+	grass := grass * (heightValue smoothStepFrom: -300.0 to: 30.0).
 	grass := grass * (1.0 - snow).
+	"grass := 0.0."
+	rock := (p * 101.12 fbmSignedGradientNoiseAbsOctaves: 4 lacunarity: 4.25) smoothStepFrom: 0.05 to: 0.07.
+	sand := (p * 101.12 fbmSignedGradientNoiseOctaves: 4 lacunarity: 7.25) smoothStepFrom: -0.3 to: 0.0.
+	rock := rock * (1.0 - (sand smoothStepFrom: 0.9 to: 1.0)).
+	sand := sand * (1.0 - snow).
+	"rock := 0.0."
+	
+	"rock := (1.0 - grass).
+	sand := 0.0."
+
 
 	{heightValue . {sand . grass . rock . snow . 0.0}}.
 ].
