@@ -13,6 +13,11 @@ WodanicDashboardModel >> defaultViewClass [
 	^ WodanicDashboardView
 ]
 
+{ #category : #testing }
+WodanicDashboardModel >> needsToRender [
+	^ super needsToRender and: [ vehicleKinematicBehavior isMoving ].
+]
+
 { #category : #accessing }
 WodanicDashboardModel >> vehicle [
 	^ vehicle

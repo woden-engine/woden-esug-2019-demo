@@ -88,6 +88,15 @@ WodanicKinematicPhysicsBehavior >> initialize [
 	angularVelocity := 0.0
 ]
 
+{ #category : #simulation }
+WodanicKinematicPhysicsBehavior >> isMoving [
+	(linearVelocity closeTo: WMVector3F zero) ifFalse: [ ^ true ].
+	(linearAcceleration closeTo: WMVector3F zero) ifFalse: [ ^ true ].
+	(engineAcceleration closeTo: 0.0) ifFalse: [ ^ true ].
+	(helmAngleFactor closeTo: 0.0) ifFalse: [ ^ true ].
+	^  false
+]
+
 { #category : #accessing }
 WodanicKinematicPhysicsBehavior >> linearAcceleration [
 	^ linearAcceleration
@@ -142,9 +151,7 @@ WodanicKinematicPhysicsBehavior >> prePhysicsTick: delta [
 			orthonormal: (WMMatrix3F zrot: helmWheelAngle negated) translation: helmWheelSceneNode position)
 	].
 	
-	((linearVelocity closeTo: WMVector3F zero)
-	and: [(linearAcceleration closeTo: WMVector3F zero)
-	and: [engineAcceleration closeTo: 0.0]]) ifTrue: [ ^ self ].
+	self isMoving ifFalse: [ ^ self ].
 	
 	helmRotation := WMMatrix3F yrot: helmAngle negated.
 	

@@ -177,7 +177,7 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 		defaultCameraFarDistance: 6000.0;
 		defaultCameraCascadeSplitDistribution: {15.0 . 500.0 . 1000.0};
 		defaultCameraToneMappingOperator: #filmic;
-		defaultCameraExposure: 0.8;
+		defaultCameraExposure: 0.65;
 		defaultFogSettings: (WDESFogSettings new
 			fogColor: ((self fogColorForSunIntensity: sunIntensity) w: 1.0);
 			useExponentialSquaredFog;
