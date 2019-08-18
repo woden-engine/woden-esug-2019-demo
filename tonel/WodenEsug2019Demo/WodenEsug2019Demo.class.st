@@ -285,16 +285,16 @@ WodenEsug2019Demo class >> createUniverse [
 			addPlayerStartPointAt: (WMVector3F x: -1121.0 y: 112.0 z: 830.0)."
 
 		"Wodanic cabin start point"
-		sector
-			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4001.0).
+		"sector
+			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4001.0)."
 
 		"Wodanic front start point"
 		"sector
 			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 3990.0)."
 			
 		"Wodanic rear start point"
-		"sector
-			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4019.0)."
+		sector
+			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4019.0).
 
 	].
 

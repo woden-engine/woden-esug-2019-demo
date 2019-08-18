@@ -4,10 +4,17 @@ Class {
 	#instVars : [
 		'sequenceTime',
 		'backgroundColor',
-		'foregroundColor'
+		'foregroundColor',
+		'regularFont',
+		'boldFont'
 	],
 	#category : #WodenEsug2019Demo
 }
+
+{ #category : #rendering }
+WodenEsug2019DemoTitleScreen >> boldFont [
+	^ boldFont ifNil: [ boldFont := engine babylonDriver font: (FreeTypeFont fromFile: 'assets/fonts/xolonium/Xolonium-Bold.ttf' pointSize: 40) ]
+]
 
 { #category : #rendering }
 WodenEsug2019DemoTitleScreen >> drawOnBabylonCanvas: canvas [
@@ -20,26 +27,38 @@ WodenEsug2019DemoTitleScreen >> drawOnBabylonCanvas: canvas [
 
 	builder transform
 		translateBy: canvas surface extent / 2;
-		scaleBy: canvas surface extent y / 240.
+		scaleBy: canvas surface extent y / 480.
 
 	builder transform restoreAfter: [
-		builder transform scaleBy: 1.5.
 		builder
 			text
 			color: foregroundColor;
-			font: self babylonDefaultFont;
+			font: self regularFont;
 
-			position: -80 @ -50;
-			draw: 'Voyage in the WODANIC ALPHA'.
+			position: -210 @ -170;
+			draw: 'Voyage in the';
+			newline;
+			position: -260 @ -110;
+			font: self boldFont;
+			draw: 'WODANIC ALPHA'.
 	].
-		
-	builder text
-		font: self babylonDefaultFont;
-		color: foregroundColor;
-		position: -20 @ -30;
-		draw: 'Episode 0.01';
-		position: -100 @ 10;
-		draw: 'The mystery of the lighthouse in'; newline; draw: 'the volcanic island of Lake Wallen.'.
+
+	builder transform restoreAfter: [
+		builder transform scaleBy: 0.6.
+
+		builder text
+			font: self regularFont;
+			color: foregroundColor;
+
+			position: -190 @ 0;
+			draw: 'Episode 0.01:';
+
+			position: -350 @ 120;
+			draw: 'A mysterious awakening'; newline;
+			draw: '        in the volcanic'; newline;
+			draw: '         Lake Wallen.'.
+
+	].		
 
 	mesh := builder mesh.
 	canvas draw: mesh.
@@ -55,8 +74,13 @@ WodenEsug2019DemoTitleScreen >> initialize [
 
 { #category : #testing }
 WodenEsug2019DemoTitleScreen >> isAlive [
-	"^ sequenceTime < 10.0"
-	^ sequenceTime < 0.0.
+	^ sequenceTime < 10.0
+	"^ sequenceTime < 0.0."
+]
+
+{ #category : #rendering }
+WodenEsug2019DemoTitleScreen >> regularFont [
+	^ regularFont ifNil: [ regularFont := engine babylonDriver font: (FreeTypeFont fromFile: 'assets/fonts/xolonium/Xolonium-Regular.ttf' pointSize: 40) ]
 ]
 
 { #category : #testing }
