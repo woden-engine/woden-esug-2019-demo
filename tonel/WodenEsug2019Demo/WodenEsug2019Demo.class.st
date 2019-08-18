@@ -69,6 +69,36 @@ WodenEsug2019Demo class >> addWodanicToSector: sector at: wodanicPosition [
 			helmWheelBoundingBox := comp getChildNodeBoundingBox: 'WodanicHelmWheel'.
 		].
 
+		wodanic addSoundSourceComponentAt: WMVector3F zero with: [ :comp |
+			comp loadSoundSample: 'sounds/noise/engine.wav';
+				isGlobalSource: false;
+				looped: true;
+				gain: 0.0;
+				pitch: 1.0;
+				play.
+			kinematicBehavior engineSoundSource: comp
+		].
+
+		kinematicBehavior boilerSoundSources: { 
+			wodanic addSoundSourceComponentAt: (frontChimneyPosition copy y: 0.0)  with: [ :comp |
+				comp loadSoundSample: 'sounds/noise/boiler.wav';
+					isGlobalSource: false;
+					looped: true;
+					gain: 0.6;
+					pitch: 1.0;
+					play.
+			].
+
+			wodanic addSoundSourceComponentAt: (backChimneyPosition copy y: 0.0)  with: [ :comp |
+				comp loadSoundSample: 'sounds/noise/boiler.wav';
+					isGlobalSource: false;
+					looped: true;
+					gain: 0.8;
+					pitch: 1.0;
+					play.
+			].
+		}.
+	
 		wodanic addModelLibraryNamed: altoModelName nodeNamed: 'AltoCpu' with: [ :comp |
 			comp position: (wodanicModel getChildNodePosition: 'WodanicAltoCpuLocation')
 		].
@@ -214,7 +244,9 @@ WodenEsug2019Demo class >> createUniverse [
 		].
 	
 		sector addWaterVolumeAt: WMVector3F zero with: [ :waterEntity :waterComponent |
-			waterComponent environmentFogSettings: underwaterFog.
+			waterComponent
+				environmentFogSettings: underwaterFog;
+				environmentSoundGainFactor: 0.2.
 			(waterEntity buildWaterMeshWith: [ :meshBuilder |
 				waterMaterial := engine resourceCache loadMaterial: 'materials/water/blue-sea.json'.
 				meshBuilder

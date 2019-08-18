@@ -20,10 +20,22 @@ Class {
 		'engineAccelerationTargetTau',
 		'helmAngleTargetTau',
 		'angularVelocity',
-		'currentDriver'
+		'currentDriver',
+		'engineSoundSource',
+		'boilerSoundSources'
 	],
 	#category : #WodenEsug2019Demo
 }
+
+{ #category : #accessing }
+WodanicKinematicPhysicsBehavior >> boilerSoundSources [
+	^ boilerSoundSources
+]
+
+{ #category : #accessing }
+WodanicKinematicPhysicsBehavior >> boilerSoundSources: anObject [
+	boilerSoundSources := anObject
+]
 
 { #category : #accessing }
 WodanicKinematicPhysicsBehavior >> currentDriver [
@@ -48,6 +60,16 @@ WodanicKinematicPhysicsBehavior >> engineDirection [
 { #category : #accessing }
 WodanicKinematicPhysicsBehavior >> engineDirection: anObject [
 	engineDirection := anObject
+]
+
+{ #category : #accessing }
+WodanicKinematicPhysicsBehavior >> engineSoundSource [
+	^ engineSoundSource
+]
+
+{ #category : #accessing }
+WodanicKinematicPhysicsBehavior >> engineSoundSource: anObject [
+	engineSoundSource := anObject
 ]
 
 { #category : #accessing }
@@ -85,7 +107,8 @@ WodanicKinematicPhysicsBehavior >> initialize [
 	helmAngle := 0.0.
 	helmWheelAngle := 0.0.
 
-	angularVelocity := 0.0
+	angularVelocity := 0.0.
+	boilerSoundSources := #().
 ]
 
 { #category : #simulation }
@@ -134,12 +157,13 @@ WodanicKinematicPhysicsBehavior >> maxAcceleration [
 
 { #category : #simulation }
 WodanicKinematicPhysicsBehavior >> prePhysicsTick: delta [
-	| maxAccel helmRotation oldTransform |
+	| maxAccel helmRotation oldTransform engineAccelerationFactor |
 
 	"Reach the engine target acceleration with an exponential curve"
 	maxAccel := self maxAcceleration.
 	engineAcceleration := engineAcceleration interpolateTo: maxAccel*engineDirection at: 1.0 - ((delta negated * engineAccelerationTargetTau) exp).
-	
+	engineAccelerationFactor := engineAcceleration abs / maxAccel.
+
 	"Reach the helm target angle with an exponential curve"
 	helmAngleFactor := helmAngleFactor interpolateTo: turnDirection at: 1.0 - ((delta negated * helmAngleTargetTau) exp).
 
@@ -149,6 +173,17 @@ WodanicKinematicPhysicsBehavior >> prePhysicsTick: delta [
 	helmWheelSceneNode ifNotNil: [
 		helmWheelSceneNode transform: (WMReversibleAffineTransformF identity
 			orthonormal: (WMMatrix3F zrot: helmWheelAngle negated) translation: helmWheelSceneNode position)
+	].
+
+	engineSoundSource ifNotNil: [
+		engineSoundSource
+			pitch: engineAccelerationFactor;
+			gain: engineAccelerationFactor*2.0.
+		boilerSoundSources do: [ :source |
+			source
+				pitch: (1.0 interpolateTo: 1.5 at: engineAccelerationFactor);
+				gain: (0.8 interpolateTo: 2.0 at: engineAccelerationFactor)
+		]
 	].
 	
 	self isMoving ifFalse: [ ^ self ].
