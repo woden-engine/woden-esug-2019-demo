@@ -259,6 +259,15 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 			self createVolcanoParticleSystem: chimney
 		]) translateTo: (WMVector3F y: 1000.0).
 	
+		sector addSoundSourceComponentAt: WMVector3F zero with: [ :comp |
+			comp loadSoundSample: 'sounds/environment/wind.wav';
+				isGlobalSource: true;
+				looped: true;
+				gain: 0.5;
+				pitch: 1.0;
+				play
+		].
+	
 		sector addWaterVolumeAt: WMVector3F zero with: [ :waterEntity :waterComponent |
 			waterComponent environmentFogSettings: underwaterFog.
 			(waterEntity buildWaterMeshWith: [ :meshBuilder |
@@ -295,12 +304,12 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 			addLighthouseToSector: sector at: (WMVector3F x: -1120.0 y: 110.2 z: 820.0).
 
 		"Lighthouse start point"
-		sector
-			addPlayerStartPointAt: (WMVector3F x: -1121.0 y: 112.0 z: 830.0).
+		"sector
+			addPlayerStartPointAt: (WMVector3F x: -1121.0 y: 112.0 z: 830.0)."
 
 		"Wodanic cabin start point"
-		"sector
-			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4001.0)."
+		sector
+			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4001.0).
 
 		"Wodanic front start point"
 		"sector
