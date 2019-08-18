@@ -1,0 +1,33 @@
+{
+    "type" : "Terrain",
+
+	"triplanar" : false,
+
+    "albedo-textures" : [
+        "textures/procedural/terrain/sand.sttex",
+        "textures/procedural/terrain/grass.sttex",
+        "textures/procedural/terrain/rock.sttex",
+        "textures/procedural/terrain/snow.sttex"
+    ],
+
+    "normal-textures" : [
+        "textures/procedural/terrain/sand.sttex?texture=normal",
+        "textures/procedural/terrain/grass.sttex?texture=normal",
+        "textures/procedural/terrain/rock.sttex?texture=normal",
+        "textures/procedural/terrain/snow.sttex?texture=normal"
+    ],
+
+    "metallic-roughness-textures" : [
+        "textures/procedural/terrain/sand.sttex?texture=rma",
+        "textures/procedural/terrain/grass.sttex?texture=rma",
+        "textures/procedural/terrain/rock.sttex?texture=rma",
+        "textures/procedural/terrain/snow.sttex?texture=rma"
+    ],
+
+    "texture-scales-offsets" : [
+        [0.125, 0.125, 0.0, 0.0],
+        [1.0, 1.0, 0.0, 0.0],
+        [0.01, 0.01, 0.0, 0.0],
+        [0.5, 0.5, 0.0, 0.0]
+    ]
+}
