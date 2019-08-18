@@ -38,7 +38,7 @@ WodenEsug2019Demo class >> addAltoToSector: sector at: altoPosition [
 { #category : #'as yet unclassified' }
 WodenEsug2019Demo class >> addLighthouseToSector: sector at: lighthousePosition [
 	sector addGenericObjectAt: lighthousePosition with: [ :wodanic |
-		wodanic addModelLibraryNamed: 'lighthouse.glb' nodeNamed: 'Lighthouse' with: [ :comp |
+		wodanic addModelLibraryNamed: 'models/buildings/lighthouse.glb' nodeNamed: 'Lighthouse' with: [ :comp |
 			comp
 				createCollisionShapeWithAllMeshes
 		].
@@ -122,8 +122,8 @@ WodenEsug2019Demo class >> createChimneyParticleSystem: particleSystem [
 	| colorRamp |
 	
 	colorRamp := WDCLinearRamp with: {
-		0.15 -> (WMVector4F x: 0.02 y: 0.02 z: 0.02 w: 0.3).
-		0.8 -> (WMVector4F x: 0.5 y: 0.5 z: 0.5 w: 0.3).
+		0.15 -> (WMVector4F x: 0.2 y: 0.2 z: 0.2 w: 0.3).
+		0.8 -> (WMVector4F x: 1.2 y: 1.2 z: 1.2 w: 0.3).
 	}.
 	particleSystem boundingBox: (WMBox3DF halfExtent: (WMVector3F x: 4.0 y: 10.0 z: 4.0)).
 	particleSystem particleCount: 64.
@@ -231,7 +231,7 @@ WodenEsug2019Demo class >> createVolcanoParticleSystem: particleSystem [
 WodenEsug2019Demo class >> exampleEsugDemo [
 	| engine universe terrainMaterial waterMaterial terrainData underwaterFog sunIntensity |
 	engine := WDCEngine default.
-	terrainMaterial := engine resourceCache loadMaterial: 'materials/demos/island.json'.
+	terrainMaterial := engine resourceCache loadMaterial: 'materials/sectors/lake-wallen.json'.
 	terrainData := engine resourceCache loadTerrain: 'terrains/sectors/lake-wallen.stterrain'.
 	sunIntensity := 30.0.
 	
@@ -246,9 +246,9 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 	universe
 		gameLogicClass: WodenEsug2019DemoGameLogic;
 		defaultCameraFarDistance: 6000.0;
-		defaultCameraCascadeSplitDistribution: {15.0 . 500.0 . 1000.0};
+		defaultCameraCascadeSplitDistribution: {30.0 . 500.0 . 1000.0};
 		defaultCameraToneMappingOperator: #filmic;
-		defaultCameraExposure: 0.65;
+		defaultCameraExposure: 0.6;
 		defaultFogSettings: (WDESFogSettings new
 			fogColor: ((self fogColorForSunIntensity: sunIntensity) w: 1.0);
 			useExponentialSquaredFog;
@@ -262,7 +262,7 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 		sector addWaterVolumeAt: WMVector3F zero with: [ :waterEntity :waterComponent |
 			waterComponent environmentFogSettings: underwaterFog.
 			(waterEntity buildWaterMeshWith: [ :meshBuilder |
-				waterMaterial := engine resourceCache loadMaterial: 'materials/demos/ocean.json'.
+				waterMaterial := engine resourceCache loadMaterial: 'materials/water/blue-sea.json'.
 				meshBuilder
 					material: waterMaterial.
 				terrainData buildWaterMeshWith: meshBuilder.
@@ -295,17 +295,16 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 			addLighthouseToSector: sector at: (WMVector3F x: -1120.0 y: 110.2 z: 820.0).
 
 		"Lighthouse start point"
-		"sector
-			addPlayerStartPointAt: (WMVector3F x: -1121.0 y: 112.0 z: 830.0)."
-
+		sector
+			addPlayerStartPointAt: (WMVector3F x: -1121.0 y: 112.0 z: 830.0).
 
 		"Wodanic cabin start point"
 		"sector
 			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4001.0)."
 
 		"Wodanic front start point"
-		sector
-			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 3990.0).
+		"sector
+			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 3990.0)."
 			
 		"Wodanic rear start point"
 		"sector
