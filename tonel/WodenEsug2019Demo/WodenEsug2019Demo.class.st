@@ -120,38 +120,54 @@ WodenEsug2019Demo class >> atmosphereIntensityForSunIntensity: sunIntensity [
 { #category : #'as yet unclassified' }
 WodenEsug2019Demo class >> createChimneyParticleSystem: particleSystem [
 	| colorRamp |
-	colorRamp := WDCLinearRamp with: {
-		0.0 -> '000000' asColor asWMVector3F asWMVector4F.
-		0.6 -> 'ff0000' asColor asWMVector3F asWMVector4F.
-		0.90 -> 'ffff00' asColor asWMVector3F asWMVector4F.
-		1.0 -> 'ffff80' asColor asWMVector3F asWMVector4F.
-	}.
 	
-	particleSystem boundingBox: (WMBox3DF halfExtent: (WMVector3F ones*5.0)).
-	particleSystem particleCount: 2048.
+	colorRamp := WDCLinearRamp with: {
+		0.15 -> (WMVector4F x: 0.02 y: 0.02 z: 0.02 w: 0.3).
+		0.8 -> (WMVector4F x: 0.5 y: 0.5 z: 0.5 w: 0.3).
+	}.
+	particleSystem boundingBox: (WMBox3DF halfExtent: (WMVector3F x: 4.0 y: 10.0 z: 4.0)).
+	particleSystem particleCount: 64.
+	
 	particleSystem simulationBlock: [ :particleState :index :delta |
-		| lifeTime color flickering |
+		| lifeTime color |
 		lifeTime := particleState lifeTime  - delta.
 		lifeTime <= 0.0 ifTrue:[
-			lifeTime := 1.7 + particleState nextRandom*1.5.
+			lifeTime := 1.7 + (particleState nextRandom*1.5).
 			particleState
 				startingUp: false;
-				position: particleState nextRandomVector3F * 0.25;
+				position: particleState nextRandomVector3F * 0.5;
 				velocity: (WMVector3F
 					x: particleState nextRandom*0.5
-					y: 2.0 + (particleState nextRandom *0.5)
+					y: 5.0 + (particleState nextRandom *1.5)
 					z: particleState nextRandom*0.5).
 		].
 	
 		color := colorRamp value: lifeTime / 3.0.
-		flickering := (lifeTime*25.0) signedGradientNoise  *0.4 + 0.6.
 		
 		particleState
-			size: (WMVector3F x: 0.2 y: 0.2);
+			size: (WMVector3F x: 2.0 y: 2.0);
 			velocity: (particleState velocity + (WMVector3F y: -9.8 * delta*0.04));
 			position: (particleState position + (particleState velocity *delta));
-			color: color * flickering;
+			color: color;
 			lifeTime: lifeTime.
+	].
+	particleSystem renderingBlock: [ :particleState :particleIndex :s :t |
+		| radialPosition particleAttenuation position smokeNoise color |
+		radialPosition := (WMVector3F x: s y: t z: 0.0) * 2.0 - (WMVector3F x: 1.0 y: 1.0 z: 0.0).
+		particleAttenuation := 1.0 - (radialPosition length smoothStepFrom: 0.3 to: 1.0).
+		particleAttenuation := particleAttenuation * (particleState lifeTime smoothStepFrom: 0.0 to: 0.3).
+		particleAttenuation := particleAttenuation * (1.0 - (particleState position length smoothStepFrom: 7.0 to: 10.0)).
+		
+		color := WMVector4F zero.
+		particleAttenuation > 0.0 ifTrue: [ 
+			position := (WMVector3F x: s - 0.5 y: t -0.5 z: 0.0) * particleState size.
+			smokeNoise := (position*0.5 +
+			(WMVector3F z: particleIndex asFloat + particleState lifeTime)) fbmSignedGradientNoiseAbsOctaves: 3 lacunarity: 2.745.
+
+			color := (colorRamp value: smokeNoise) * particleAttenuation.
+		].
+	
+		color
 	].
 
 ]
@@ -224,9 +240,14 @@ WodenEsug2019Demo class >> exampleEsugDemo [
 		"sector
 			addPlayerStartPointAt: (WMVector3F x: -1121.0 y: 112.0 z: 830.0)."
 
-		"Wodanic entry point"
+		"Wodanic cabin start point"
+		"sector
+			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4001.0)."
+
+		"Wodanic rear start point"
 		sector
-			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4001.0).
+			addPlayerStartPointAt: (WMVector3F x: 0.0 y: 4.0 z: 4019.0).
+
 	].
 
 	universe createSimulationModel
