@@ -26,8 +26,8 @@ this boat.
 
 ## Parent companies
 
-* The ship building and servicing company is located in <https://github.com/ronsaldo/woden-esug-2019-demo>.
-* The holding and insurance company is located in <https://github.com/ronsaldo/woden>.
+* The ship building and servicing company is located in <https://github.com/woden-engine/woden-esug-2019-demo>.
+* The holding and insurance company is located in <https://github.com/woden-engine/woden>.
 
 ## Ship direct sales
 
